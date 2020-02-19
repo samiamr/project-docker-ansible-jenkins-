@@ -1,0 +1,16 @@
+#Contents of /etc/systemd/system/student-age.service
+
+[Unit]
+Description= Script Python app-student
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/bin/python /data/student_age.py
+
+[Install]
+WantedBy=multi-user.target

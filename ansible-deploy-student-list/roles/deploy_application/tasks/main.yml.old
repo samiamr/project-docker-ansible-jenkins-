@@ -1,0 +1,31 @@
+---
+- name: Create application directory
+  file: path=/data state=directory
+
+- name: Get application content
+  shell: ls -1 /data
+  register: content
+
+- name: Delete all file in path
+  file: path=/data/{{item}} state=absent
+  with_items: "{{content.stdout_lines}}"
+
+- name: Deploy json
+  copy: src=student_age.json dest=/data/student_age.json mode=0777
+
+- name: Deploy py
+  copy: src=student_age.py dest=/data/student_age.py mode=0777
+
+- name: Run a script student_age.py
+#  script: dest=/data/student_age.py
+#  args:
+#    executable: python
+#  shell:  python /data/student_age.py
+  shell: nohup python /data/student_age.py  </dev/null >/dev/null 2>&1 &
+#  async: 10
+#  poll: 0
+
+ 
+  notify:
+     - Test application
+

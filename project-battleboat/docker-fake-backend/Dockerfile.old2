@@ -1,0 +1,14 @@
+#FROM php:apache
+
+FROM centos:latest
+
+MAINTAINER Sami Amoura (amoura.sami@gmail.com)
+
+RUN yum -y install httpd
+
+COPY ./battleboat/ /var/www/html/
+
+
+ENTRYPOINT ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+
+EXPOSE 80

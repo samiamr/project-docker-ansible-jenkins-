@@ -1,0 +1,35 @@
+---
+- name: Install php
+  apt:
+    name=php
+    state=present
+
+- name: Install Apache server
+  apt:
+    name=apache2
+    state=present
+
+- name: Get application path content
+  shell: ls -1 /var/www/html/
+  register: content
+
+- name: Delete all file in path website
+  file:
+    path=/var/www/html/{{item}} 
+    state=absent
+  with_items: 
+    - "{{content.stdout_lines}}"
+
+- name: Update website with new index.php
+  #copy: src=index.php dest=/var/www/html/index.php
+  template: 
+    src=index.php.j2 
+    dest=/var/www/html/index.php
+
+- name: Restart service apache2
+  service:
+    name: apache2
+    state: restarted
+    #notify application has beeb restarted
+  notify:
+    - restart apache

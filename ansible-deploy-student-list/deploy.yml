@@ -1,0 +1,29 @@
+---
+- hosts: debiancible
+  become: true
+  
+  vars_files:
+    - "secrets/password.yml"
+
+  roles:
+    - python
+    - apache
+    - deploy_application
+   
+  post_tasks:
+    - name: Check that you can connect (GET) to a page and it returns a status 200
+      uri:
+        url: http://{{ ip_addr_app }} 
+
+    - name: Check webservice if its OK
+      uri:
+        url: http://{{ ip_addr_app }}:{{ port_app }}/pozos/api/v1.0/get_student_ages
+        user: "{{login_app}}"
+        password: "{{ password_app }}"
+        method: GET
+
+    - name: Application RUN
+      debug:     
+        msg: "Application work well"
+
+

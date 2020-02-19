@@ -1,0 +1,57 @@
+---
+#- name: Create fake-backend directory
+#  file:
+#    path: /tmp/
+#    state: directory
+
+#- name: Install Docker with official script
+#  command: chdir=/tmp/ {{ item }}
+# with_items:
+#    - curl -fsSL https://get.docker.com -o get-docker.sh
+#   - sh get-docker.sh
+
+#- name: Add the user 'docker'
+#  user:
+#   name: centos
+#   group: docker
+#  when: ansible_facts['distribution'] == "CentOS"
+
+#- name: Get application path '/tmp/' content
+#  shell: ls -1 /tmp/
+#  register: content
+
+#- name: Delete all file in '/tmp/'
+#  file:
+#    path=/tmp/
+#    state=absent
+#  with_items:
+#    - "{{content.stdout_lines}}"
+
+- name: Install docker centos
+  yum:
+    name: docker-ce
+    state: present
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Add the user centos into the 'docker' group
+  user:
+    name: centos
+    group: docker
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Install docker debian
+  apt:
+    name: docker-ce
+    state: present
+  when: ansible_facts['distribution'] == "Debian"
+
+- name: Add the user admin into the 'docker' group
+  user:
+    name: centos
+    group: docker
+  when: ansible_facts['distribution'] == "Debian"
+
+- name: Start service
+  service:
+    name: docker
+    state: started

@@ -1,0 +1,19 @@
+# build and push builded images
+- hosts: grp
+  become: true
+  vars_files:
+    - vars/env_vault.yml
+    - vars/env.yml
+
+  roles:
+   # - role: install-package-debian
+   #     when: ansible_facts['os_family'] == 'Debian'
+
+   # - role: install-package-centos
+   #     when: ansible_facts['os_family'] == 'CentOS'
+    - install-package
+    - install-docker
+    - administration-env
+    - login-docker
+    - build-images
+    - docker-deploy

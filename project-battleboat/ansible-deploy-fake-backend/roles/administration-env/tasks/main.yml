@@ -1,0 +1,28 @@
+---
+- name: Create fake-backend directory
+  file:
+    path: "{{ folder_fake_backend }}"
+    state: directory
+
+- name: Copy devops private keys file
+  copy:
+    src: "files/devops_private_keys"
+    dest: "/root/.ssh/id_rsa"
+    mode: "0644"
+    owner: centos
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Set authorized key taken from file
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+- name: Git clone project fack-backend
+  git:
+    repo: '{{ repo_git_fack_backend }}'
+    dest: "{{ folder_fake_backend }}"
+    force: "yes"
+    recursive: "no"
+    key_file: "/root/.ssh/id_rsa"
+    accept_hostkey: "yes"

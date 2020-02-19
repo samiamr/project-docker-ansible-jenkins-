@@ -1,0 +1,3 @@
+FROM php:apache
+
+MAINTAINER Sami Amoura (amoura.sami@gmail.com)

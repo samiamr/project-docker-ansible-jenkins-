@@ -1,0 +1,26 @@
+# build and push builded images
+- hosts: debiancible centoscible
+  become: true
+  vars_files:
+    - "secrets/docker_hub.yml"
+
+ # pre_tasks:
+  #- name: Set authorized key taken from file
+  #  authorized_key:
+   #   user: centos
+    #  state: present
+     # key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+
+  roles:
+   # - role: install-package-debian
+   #     when: ansible_facts['os_family'] == 'Debian'
+
+   # - role: install-package-centos
+   #     when: ansible_facts['os_family'] == 'CentOS'
+    - install-package
+    - install-docker
+    - administration-env
+    - login-docker
+    - build-images
+    - docker-deploy

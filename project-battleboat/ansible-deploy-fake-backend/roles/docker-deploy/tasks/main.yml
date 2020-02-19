@@ -1,0 +1,44 @@
+---
+
+#- name: Include var
+#  include_vars: ./inventory/secret.yml
+
+
+- name: Deploy Database container
+  docker_container:
+    name: "{{ docker_container_name_db }}"
+    hostname: "{{ docker_container_hostanme_db }}"
+    image: "{{ docker_image_mysql }}"
+    state: started
+    volumes:
+      - "{{ name_docker_volume_db_data }}:/var/lib/mysql"
+    networks:
+      - name: "{{ name_docker_network }}"
+    ports:
+      - "{{ port_mysql }}:{{ port_mysql }}"
+    restart_policy: "always"
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ MYSQL_ROOT_PASSWORD }}"
+      MYSQL_DATABASE: "{{ MYSQL_DATABASE }}"
+      MYSQL_USER: "{{ MYSQL_USER }}"
+      MYSQL_PASSWORD: "{{ MYSQL_PASSWORD }}"
+
+- name: "Deploy fake-backend container"
+  docker_container:
+    name: "{{ docker_container_name_fake_backend }}"
+    hostname: "{{ docker_container_hostanme_fake_backend }}"
+    image: "{{ name_image_docker }}:{{ tag_name }}"
+    state: started
+    volumes:
+     - "{{ path_volume_bind }}/{{ website_files_battleboat_gh_pages }}:/etc/backend/static"
+    networks:
+      - name: "{{ name_docker_network }}"
+    ports:
+      - "{{ port_expose_front_end }}:{{ port_private_front_end }}"
+    restart_policy: "always"
+    env:
+      DATABASE_HOST: "{{ DATABASE_HOST }}"
+      DATABASE_PORT: "{{ DATABASE_PORT }}"
+      DATABASE_USER: "{{ DATABASE_USER }}"
+      DATABASE_PASSWORD: "{{ DATABASE_PASSWORD }}"
+      DATABASE_NAME: "{{ DATABASE_NAME }}"

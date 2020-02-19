@@ -1,0 +1,32 @@
+---
+- name: Install all dependencies debian
+  apt:
+   name:
+    - python-dev
+    - python3-dev
+    - libsasl2-dev
+    - python-dev
+    - libldap2-dev
+    - libssl-dev
+    - python3-pip
+    - python-pip
+    - git
+    - python-docker
+   state: present
+  when: ansible_facts['distribution'] == "Debian"
+
+- name: Install all dependencies centos
+  yum:
+   name:
+    - epel-release
+    - git
+    - python
+    - python-pip
+   state: present
+  when: ansible_facts['distribution'] == "CentOS"
+
+
+- name: install (Bottle) python package.
+  pip:
+    name: docker-py
+  #when: ansible_facts['distribution'] == "Debian"

@@ -1,0 +1,25 @@
+---
+- name: Install python
+  apt:
+   name: "{{ item }}"
+   update_cache: true
+   state: present
+  with_items:
+    - python-dev
+    - python3-dev
+    - libsasl2-dev
+    - python-dev
+    - libldap2-dev
+    - libssl-dev
+    - python3-pip
+    - python-pip
+
+- name: Install flask pkg
+  pip:
+   name: "{{ item }}"
+   state: present
+  with_items:
+    - 'flask'
+    - 'flask_httpauth'
+    - 'flask_simpleldap'
+    - 'pyth'

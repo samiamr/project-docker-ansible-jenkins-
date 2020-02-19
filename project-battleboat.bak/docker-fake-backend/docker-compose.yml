@@ -1,0 +1,53 @@
+version: "3.7"
+services:
+ # db 
+  db-samiamr:
+    hostname: "db-samiamr"
+    image: "mysql:5.7"
+    container_name: "db-samiamr"
+    volumes:
+    #  - type: volume
+    #    source: db-data2
+    #    target: /var/lib/mysql/data
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "root-samiamr"
+      MYSQL_DATABASE: "battleboat"
+      MYSQL_USER: "battleuser"
+      MYSQL_PASSWORD: "battlepass"
+    ports:
+      - "3306:3306"
+    networks:
+      - "battleboat"
+    restart: always
+
+  # fake-backend
+  battle-samiamr:
+    hostname: "battle-samiamr"
+    image: "samiamr/fake-backend"
+    container_name: "battle-samiamr"
+    volumes:
+    #  - type: bind
+    #    source: ./battleboat
+    #    target: /etc/backend/static
+      - ./battleboat/:/etc/backend/static
+    environment:
+      DATABASE_HOST: "db-samiamr"
+      DATABASE_PORT: "3306"
+      DATABASE_USER: "battleuser"
+      DATABASE_PASSWORD: "battlepass"
+      DATABASE_NAME: "battleboat"
+    ports:
+      - "8181:3000"
+    networks:
+      - "battleboat"
+    restart: always
+    depends_on:
+      - "db-samiamr"
+
+networks:
+  battleboat:
+    name: "battleboat"
+    
+volumes:
+  db-data:

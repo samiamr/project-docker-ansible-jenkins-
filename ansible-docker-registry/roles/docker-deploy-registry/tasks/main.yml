@@ -1,0 +1,41 @@
+---
+- name: Start docker
+  command: systemctl start docker
+
+- name: Create docker network
+  docker_network:
+    name: registry
+
+- name: Create a volume storage-registry
+  docker_volume:
+    name: storage-registry
+
+- name: Deploy registry container
+  docker_container:
+    name: samiamr-registry
+    hostname: samiamr-registry
+    image: registry:2
+    state: started
+    volumes:
+      - storage-registry:/var/lib/registry
+    networks:
+      - name: registry
+    ports:
+      - "4001:5000"
+    restart_policy: "always"
+
+- name: Deploy ui registry
+  docker_container:
+    name: samiamr-registry-ui
+    hostname: samiamr-registry-ui
+    image: joxit/docker-registry-ui:static
+    state: started
+    networks:
+      - name: registry
+    ports:
+      - "4002:80"
+    restart_policy: "always"
+    env: 
+      REGISTRY_URL: "http://samiamr-registry:5000"
+      DELETE_IMAGES: "true"
+      REGISTRY_TITLE: "Registry Sami Amoura"

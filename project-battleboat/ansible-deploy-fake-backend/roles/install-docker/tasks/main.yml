@@ -1,0 +1,55 @@
+---
+- name: Ansible check directory.
+  stat:
+    path: "{{ folder_tmp }}"
+  register: folder_tmp_var
+
+
+- name: "Echo if directory already existed"
+  debug:
+    msg: "the directory is already existed"
+  when: folder_tmp_var.stat.exists
+
+- name: Create directory if not exists
+  file:
+    path: "{{ folder_tmp }}"
+    state: directory
+    mode: 0755
+    group: root
+    owner: root
+  when: folder_tmp_var.stat.exists == false
+
+- debug:
+    msg: "{{ folder_tmp }}/{{ script_file }}"
+
+- name: Check is script file exists
+  stat:
+    path: "{{ folder_tmp }}/{{ script_file }}"
+  register: script
+
+- name: "echo if script file already existed"
+  debug:
+    msg: "the scipt-docker is already existed"
+  when: script.stat.exists
+
+- name: Install Docker with official script if script is not present
+  command: chdir={{folder_tmp}}/ {{ item }}
+  with_items:
+    - curl -fsSL https://get.docker.com -o {{ script_file }}
+    - sh {{ script_file }}
+  when: script.stat.exists == false
+ 
+- name: Add the user root into the 'docker' group if script file is absent
+  user:
+    name: root
+    group: docker
+  when: (ansible_facts['distribution'] == "CentOS" and script.stat.exists == false )
+
+- name: Add the user admin into the 'docker' group if script file is absent
+  user:
+    name: admin
+    group: docker
+  when: (ansible_facts['distribution'] == "Debian" and script.stat.exists == false )
+
+- name: Start Docker.
+  command: systemctl start docker

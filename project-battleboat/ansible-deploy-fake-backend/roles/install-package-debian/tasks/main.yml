@@ -1,0 +1,41 @@
+---
+- name: Install all dependencies debian
+  apt:
+   name: "{{ item }}"
+   #update_cache: true
+   state: present
+  with_items:
+    - python-dev
+    - python3-dev
+    - libsasl2-dev
+    - python-dev
+    - libldap2-dev
+    - libssl-dev
+    - python3-pip
+    - python-pip
+    - git
+    - python-docker
+  when: (ansible_facts['distribution'] == "Debian"
+
+- name: Install all dependencies centos
+  yum:
+   name: "{{ item }}"
+   #update_cache: true
+   state: present
+  with_items:
+    - python-dev
+    - python3-dev
+    - libsasl2-dev
+    - python-dev
+    - libldap2-dev
+    - libssl-dev
+    - python3-pip
+    - python-pip
+    - git
+    - python-docker
+    - epel-release 
+  when: (ansible_facts['distribution'] == "CentOs"
+
+- name: install (Bottle) python package.
+  pip:
+    name: docker-py

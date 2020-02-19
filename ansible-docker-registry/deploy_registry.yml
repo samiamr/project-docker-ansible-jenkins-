@@ -1,0 +1,22 @@
+# build and push builded images
+
+- hosts: localhost
+  become: true
+
+  vars_files:
+    - "vars/env.yml"
+
+  post_tasks:
+    - name: Restart docker
+      command: systemctl restart docker
+
+  roles:
+    - deploy-local-conf-docker
+
+
+- hosts: centoscible6
+  become: true
+
+  roles:
+    - docker-deploy-registry
+

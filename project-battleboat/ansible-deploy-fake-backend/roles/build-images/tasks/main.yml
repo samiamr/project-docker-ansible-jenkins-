@@ -1,0 +1,29 @@
+---
+- name: Build fake-backend image and push on personal DockerHub
+  docker_image:
+    path: "{{ folder_fake_backend }}"
+    name: "{{ name_image_docker }}"
+    push: yes
+    tag: "{{ tag_name }}"
+
+- name: Create docker network
+  docker_network:
+    name: "{{ name_docker_network }}"
+
+- name: Create a volume db-data
+  docker_volume:
+    name: "{{ name_docker_volume_db_data }}"
+
+- name: Create volumes folders for bind option
+  file:
+    path: "{{ path_volume_bind }}/{{ item }}"
+    state: directory
+  with_items:
+    - "{{ website_files_battleboat_gh_pages }}"
+
+- name: Git clone project fack-backend
+  git:
+    repo: '{{ repo_git_battleboat_gh_pages }}'
+    dest: "{{ path_volume_bind }}/{{ website_files_battleboat_gh_pages }}"
+    force: yes
+    recursive: no

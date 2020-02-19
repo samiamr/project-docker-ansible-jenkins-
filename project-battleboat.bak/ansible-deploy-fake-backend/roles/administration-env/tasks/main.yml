@@ -1,0 +1,27 @@
+---
+- name: Create fake-backend directory
+  file:
+    path: /fake-backend/
+    state: directory
+
+- name: "Copy devops private keys file"
+  copy:
+    src: "files/devops_private_keys"
+    dest: "/root/.ssh/id_rsa"
+    mode: "0644"
+    owner: "centos"
+
+- name: Set authorized key taken from file
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '/root/.ssh/id_rsa.pub') }}"
+
+- name: Git clone project fack-backend
+  git:
+    repo: 'https://github.com/alexandrevilain/fake-backend.git'
+    dest: /fake-backend/
+    force: "yes"
+    recursive: "no"
+    key_file: "/root/.ssh/id_rsa"
+    accept_hostkey: "yes"
