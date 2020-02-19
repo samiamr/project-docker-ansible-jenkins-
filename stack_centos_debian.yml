@@ -1,0 +1,232 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  License: Apache-2.0
+Description: 'AWS CloudFormation Sample Template EC2InstanceWithSecurityGroupSample:
+  Create an Amazon EC2 instance running the Amazon Linux AMI. The AMI is chosen based
+  on the region in which the stack is run. This example creates an EC2 security group
+  for the instance to give you SSH access. **WARNING** This template creates an Amazon
+  EC2 instance. You will be billed for the AWS resources used if you create a stack
+  from this template.'
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: Docker EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.nano, t2.micro, t2.small, t2.medium, t2.large, t2.xlarge, t2.2xlarge,
+      t3.nano, t3.micro, t3.small, t3.medium, t3.large, t3.xlarge, t3.2xlarge,
+      m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge,
+      m5.large, m5.xlarge, m5.2xlarge, m5.4xlarge,
+      c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge,
+      g3.8xlarge,
+      r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r3.12xlarge,
+      i3.xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge,
+      d2.xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge]
+    ConstraintDescription: must be a valid EC2 instance type.
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+Resources:
+  CentosInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+       - Key: Name
+         Value: 'CentOS-cible'
+      InstanceType: !Ref 'InstanceType'
+      SecurityGroups: [!Ref 'InstanceSecurityGroup']
+      KeyName: !Ref 'KeyName'
+      ImageId: 'ami-0083662ba17882949'
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+
+            sudo echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+qS3oxnpJxrLlY3k7QmMppmqbLcALtLU7fMhLxe0stNbk/6ewzZmwHaYxCjtrgl50j9WRXYoPFSKjp7wg44Uiyl5EXLYKgnuDPsNTRvPmfuKfUJJrhzNSIMr4DmcY2gRShxgPOj05WkfjfpZIAMH/RbixBp9UB3/TFO3FZXr32fR1NhNxe4CEDjung5dhbasi/RQho1BQ0uPkr1YO9x6E9I5+lAmEDbD0FhiGrIcY0D0fO+iFAKt0RL1m1cPRocFO/f0EeKnnGCcnjdcpjf0/23mk7abQv10TVO4Aw5KhuAj644tOevV9hAzVmfti02TU9mEtDg3A54AoX0Noofxt root@ip-172-31-90-194.ec2.internal' >> /root/.ssh/authorized_keys
+            sudo echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDM/ClSeJSn+GcVB1cG6bj4r6dZjQyIbPfLdGhKJdkWnCz2HX2t6AREDJZfFHcMgGTjoIiqs1iJDZNSpfRp52cEdLd0i+mpneeG45Gr+Z9mOEAlxdjKED9cZHhyqSgfoyGvryaT3eF1uEBnZily9j43ehH9l+49D4lpFKV9MNAjfucpU2QfnSAmYBkwmeTcBMu6qT8OdWaZtls1asFlvSeg9aauuHklAHi5xgg5/jKEBrfl4YYLo/oEv3v2muJbPkFDuKCSssGD2tAvQ6ORM0/Y8JI7r5CrYsYXZBlsSzy3teuLuPT8EJwwuMGs5Mw9CBt9iUk03vAkqE/M92pjvIl1 centos@ip-172-31-90-194.ec2.internal' >> /root/.ssh/authorized_keys
+
+            ma_chaine='PasswordAuthentication no'
+            ma_new_chaine='PasswordAuthentication yes'
+            chemin_file="/etc/ssh/sshd_config"
+            if grep -q "$ma_chaine" "$chemin_file";then
+                sudo sed -i -e "s/$ma_chaine/$ma_new_chaine/g" "$chemin_file"
+            else
+                echo "Aucune correpondnace trouv?e"
+            fi
+
+            ma_chaine2='PermitRootLogin no'
+            ma_new_chaine2='PermitRootLogin yes'
+            chemin_file2="/etc/ssh/sshd_config"
+            if grep -q "$ma_chaine2" "$chemin_file2";then
+                sudo sed -i -e "s/$ma_chaine2/$ma_new_chaine2/g" "$chemin_file2"
+            else
+                echo "Aucune correpondnace trouvee"
+            fi
+
+            sudo echo -e "centos\centos" | (passwd --stdin centos)
+            sudo echo -e "centos\centos" | (passwd --stdin root)
+
+            # Desactivate ssh timer
+            sudo echo 'ClientAliveInterval 4' >> /etc/ssh/sshd_config
+            sudo echo 'ClientAliveCountMax 22' >> /etc/ssh/sshd_config
+            sudo systemctl restart sshd
+
+            # Generate sshkey for user root
+            sudo echo -e "\n\n\n y \n" | ssh-keygen -t rsa -N ""
+
+            # Activate line numer editor vim
+            sudo echo 'set nocompatible' > ~/.vimrc
+            sudo echo 'set number' >> ~/.vimrc
+
+            sudo reboot
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+       - Key: Name
+         Value: 'CentOS'
+      GroupDescription: Enable port 22, 80, 5000, 4001, 4002, 8181 and 3306
+      GroupName: Centos
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 5000
+        ToPort: 5000
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 4001
+        ToPort: 4001
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 4002
+        ToPort: 4002
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 8181
+        ToPort: 8181
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: !Ref 'SSHLocation'
+
+  DebianInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      Tags:
+       - Key: Name
+         Value: 'Debian-cible'
+      InstanceType: !Ref 'InstanceType'
+      SecurityGroups: [!Ref 'InstanceSecurityGroup']
+      KeyName: !Ref 'KeyName'
+      ImageId: 'ami-003f19e0e687de1cd'
+      UserData:
+        'Fn::Base64':
+          !Sub |
+            #!/bin/bash
+
+            sudo echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+qS3oxnpJxrLlY3k7QmMppmqbLcALtLU7fMhLxe0stNbk/6ewzZmwHaYxCjtrgl50j9WRXYoPFSKjp7wg44Uiyl5EXLYKgnuDPsNTRvPmfuKfUJJrhzNSIMr4DmcY2gRShxgPOj05WkfjfpZIAMH/RbixBp9UB3/TFO3FZXr32fR1NhNxe4CEDjung5dhbasi/RQho1BQ0uPkr1YO9x6E9I5+lAmEDbD0FhiGrIcY0D0fO+iFAKt0RL1m1cPRocFO/f0EeKnnGCcnjdcpjf0/23mk7abQv10TVO4Aw5KhuAj644tOevV9hAzVmfti02TU9mEtDg3A54AoX0Noofxt root@ip-172-31-90-194.ec2.internal' >> /root/.ssh/authorized_keys
+            sudo echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDM/ClSeJSn+GcVB1cG6bj4r6dZjQyIbPfLdGhKJdkWnCz2HX2t6AREDJZfFHcMgGTjoIiqs1iJDZNSpfRp52cEdLd0i+mpneeG45Gr+Z9mOEAlxdjKED9cZHhyqSgfoyGvryaT3eF1uEBnZily9j43ehH9l+49D4lpFKV9MNAjfucpU2QfnSAmYBkwmeTcBMu6qT8OdWaZtls1asFlvSeg9aauuHklAHi5xgg5/jKEBrfl4YYLo/oEv3v2muJbPkFDuKCSssGD2tAvQ6ORM0/Y8JI7r5CrYsYXZBlsSzy3teuLuPT8EJwwuMGs5Mw9CBt9iUk03vAkqE/M92pjvIl1 centos@ip-172-31-90-194.ec2.internal' >> /root/.ssh/authorized_keys
+
+            ma_chaine='PasswordAuthentication no'
+            ma_new_chaine='PasswordAuthentication yes'
+            chemin_file="/etc/ssh/sshd_config"
+            if grep -q "$ma_chaine" "$chemin_file";then
+                sudo sed -i -e "s/$ma_chaine/$ma_new_chaine/g" "$chemin_file"
+            else
+                echo "Aucune correpondnace trouv?e"
+            fi
+
+            sudo echo -e "debian\debian" | (passwd --stdin admin)
+            sudo echo -e "debian\debian" | (passwd --stdin root)
+
+            # Desactivate ssh timer
+            sudo echo 'ClientAliveInterval 4' >> /etc/ssh/sshd_config
+            sudo echo 'ClientAliveCountMax 22' >> /etc/ssh/sshd_config
+            sudo echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config
+            sudo echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config
+
+            sudo systemctl restart sshd
+
+            # Generate sshkey for user root
+            sudo echo -e "\n\n\n y \n" | ssh-keygen -t rsa -N ""
+
+            # Activate line numer editor vim
+            sudo echo 'set nocompatible' > ~/.vimrc
+            sudo echo 'set number' >> ~/.vimrc
+
+            sudo reboot
+
+  InstanceSecurityGroup2:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+       - Key: Name
+         Value: 'Debian'
+      GroupDescription: Enable port 22, 80, 5000, 4001, 4002, 8181 and 3306
+      GroupName: Debian
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 5000
+        ToPort: 5000
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 4001
+        ToPort: 4001
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 4002
+        ToPort: 4002
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 8181
+        ToPort: 8181
+        CidrIp: !Ref 'SSHLocation'
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: !Ref 'SSHLocation'
+
+Outputs:
+  InstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !Ref 'CentosInstance'
+    Value: !Ref 'DebianInstance'
+  AZ:
+    Description: Availability Zone of the newly created EC2 instance
+    Value: !GetAtt [CentosInstance, AvailabilityZone]
+    Value: !GetAtt [DebianInstance, AvailabilityZone]
+  PublicDNS:
+    Description: Public DNSName of the newly created EC2 instance
+    Value: !GetAtt [CentosInstance, PublicDnsName]
+    Value: !GetAtt [DebianInstance, PublicDnsName]
+  PublicIP:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt [CentosInstance, PublicIp]
+    Value: !GetAtt [DebianInstance, PublicIp]
+

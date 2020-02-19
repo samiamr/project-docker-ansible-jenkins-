@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set +x
+cd /home/centos/project-docker-ansible-jenkins/project-battleboat/ansible-deploy-fake-backend
+ansible-playbook --vault-password-file vault_pass.yml deploy.yml
+r
+cd /home/centos/project-docker-ansible-jenkins/ansible_docker_registry
+ansible-playbook deploy_registry.yml
+
+mkdir /home/centos/build_jenkins
+cd /home/centos/build_jenkins
+git clone https://github.com/alexandrevilain/fake-backend.git
+cd fake-backend
+docker build -t fake-backend:jenkins .
+docker tag fake-backend:jenkins 172.31.80.51:4001/fake-backend:jenkins190220
+docker tag fake-backend:jenkins samiamr/fake-backend:jenkins
+docker push 172.31.80.51:4001/fake-backend:jenkins190220
+docker login --username=$dockerhub_sami_login --password=$dockerhub_sami_password
+docker push samiamr/fake-backend:jenkins
+
+
+
+
+
+
+#!/bin/bash
+
+set +x
+git clone https://github.com/alexandrevilain/fake-backend.git
+cd fake-backend
+docker build -t fake-backend:jenkins .
+docker tag fake-backend:jenkins 172.31.85.230:4001/fake-backend:jenkins
+docker tag fake-backend:jenkins samiamr/fake-backend:jenkins
+docker push 172.31.85.230:4001/fake-backend:jenkins
+docker login --username=$dockerhub_sami_login --password=$dockerhub_sami_password
+docker push samiamr/fake-backend:jenkins
