@@ -1,3 +1,5 @@
+
+local ansible_host=172.31.37.72
 [grp]
-debiancible6 ansible_host=172.31.86.246
-centoscible6 ansible_host=172.31.80.51
+debiancible ansible_host=172.31.83.111
+centoscible ansible_host=172.31.80.86
